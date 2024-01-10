@@ -186,7 +186,9 @@ trzeba shoud down, aby zatrzymac
 
 kolejka do wynikow, tak mozna tez zrobic ze skanowaniem protow
 
+CSV reader - wczytywanie i przetwarzanie
 
+wątki
 
  */
 
