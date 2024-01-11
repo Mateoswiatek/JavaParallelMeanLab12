@@ -2,13 +2,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 public class AsyncMean {
+    static double[] array;
     static class MeanCalcSupplier implements Supplier<Double> {
         private final int start;
         private final int end;
@@ -21,13 +19,22 @@ public class AsyncMean {
 
         @Override
         public Double get() {
-            double mean = Arrays.stream(Arrays.copyOfRange(array, start, end)).average().orElse(Double.NaN);
-            System.out.printf(Locale.US,"%d-%d mean=%f\n",start,end,mean);
-            return mean;
+            return Arrays.stream(Arrays.copyOfRange(array, start, end)).average().orElse(Double.NaN);
+//            double mean = ...
+//            System.out.printf(Locale.US,"%d-%d mean=%f\n",start,end,mean);
+//            reutr mean
         }
     }
 
-    static double[] array;
+    public static void main(String[] args) {
+        int size = 100_000_000;
+        initArray(size);
+
+        asyncMeanv1(1000);
+        asyncMeanv2(1000);
+    }
+
+
     static void initArray(int size){
         array = new double[size];
         for(int i=0;i<size;i++){
@@ -36,8 +43,8 @@ public class AsyncMean {
     }
 
     public static void asyncMeanv1(int kubelki) {
-        int size = 100_000_000;
-        initArray(size);
+//        int size = 100_000_000;
+//        initArray(size);
         ExecutorService executor = Executors.newFixedThreadPool(16);
 
         int diff = array.length / kubelki;
@@ -50,37 +57,59 @@ public class AsyncMean {
                     new MeanCalcSupplier(start, (start+=diff)),executor);
             partialResults.add(partialMean);
         }
+
         // zagreguj wyniki
+        double avg = partialResults.stream().mapToDouble(cf -> {
+            try {
+                return cf.get();
+            } catch (InterruptedException | ExecutionException e){
+                return 0.0;
+            }
+        }).average().orElse(Double.NaN);
 
-        try {
-            // Pobierz wyniki częściowe z obiektów CompletableFuture i policz sumę
-            double sum = partialResults.stream()
-                    .mapToDouble(cf -> {
-                        try {
-                            return cf.get(); // Pobierz wynik z CompletableFuture
-                        } catch (InterruptedException | ExecutionException e) {
-                            return 0.0; // Obsłuż błąd lub zwróć domyślną wartość
-                        }
-                    })
-                    .sum();
-
-            // Oblicz średnią arytmetyczną
-            double average = sum / partialResults.size();
-            System.out.println("Średnia wynosi: " + average);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        double mean = 0;
         for(var pr:partialResults){
+            pr.join();
             // wywołaj pr.join() aby odczytać wartość future;
             // join() zawiesza wątek wołający
         }
-        System.out.printf(Locale.US,"mean=%f\n",mean);
+        System.out.printf(Locale.US,"mean1=%f%n",avg);
 
         executor.shutdown();
     }
 
+    static void asyncMeanv2(int kubelki) {
+//        int size = 100_000_000;
+//        initArray(size);
+        ExecutorService executor = Executors.newFixedThreadPool(16);
+
+        int diff = array.length / kubelki;
+        int start = 0;
+
+
+        BlockingQueue<Double> queue = new ArrayBlockingQueue<>(kubelki);
+
+        for (int i = 0; i < kubelki; i++) {
+            CompletableFuture.supplyAsync(
+                    new MeanCalcSupplier(start, (start+=diff)),executor)
+            .thenApply(queue::offer); // dodajemy
+        }
+
+        double mean=0;
+        int x = kubelki;
+        double sum =0;
+        while(x-- > 0){
+            try {
+                sum+=queue.take();
+            } catch (InterruptedException e){
+                System.out.println("Exception: " + e);
+            }
+        }
+        mean = sum / kubelki;
+
+        System.out.printf(Locale.US,"mean2=%f%n", mean);
+
+        executor.shutdown();
+    }
 
 }
 

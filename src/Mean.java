@@ -17,7 +17,7 @@ public class Mean {
         }
         public void run(){
             mean = Arrays.stream(Arrays.copyOfRange(array, start, end)).average().orElse(Double.NaN);
-            // System.out.printf(Locale.US,"%d-%d mean=%f\n",start,end,mean);
+//            System.out.printf(Locale.US,"%d-%d mean=%f\n",start,end,mean);
             try {
                 results.put(mean);
             } catch (InterruptedException e) {
@@ -40,9 +40,9 @@ public class Mean {
 
     public static void main(String[] args) {
         System.out.println("siea");
-//        initArray(100000000);
+//        initArray(100);
 //        initArray(100000);
-//        parallelMean3(16, 50);
+//        parallelMean3(16, 10);
         test();
     }
 
@@ -166,30 +166,15 @@ public class Mean {
 
 }
 
-
-//TODO do pierwszego zakresu cos jest nie halo
-
-
 // take i put to funkcje blokujące,
 // put czeka jesli kolejka jest plena
 // take czeka jesli nic nie ma na stosie.
 
-
-// offer -  nie blokuje
 /*
 pula watkow, executor - zarządza
 ograniczenie się do pewnej ilosci wątków. te wątki dostają zadania do wykonania. gdy wykkonają
-
 zadanie - albo jakko wątek, albo jako obietk który robi runnable. - mega. przy tym moim skanowaniu.
-
-trzeba shoud down, aby zatrzymac
-
 kolejka do wynikow, tak mozna tez zrobic ze skanowaniem protow
-
-CSV reader - wczytywanie i przetwarzanie
-
-wątki
-
  */
 
 
