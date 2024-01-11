@@ -41,7 +41,7 @@ public class Mean {
     public static void main(String[] args) {
         System.out.println("siea");
 //        initArray(100);
-        initArray(100000000);
+        initArray(10000);
         parallelMean1(8);
         parallelMean2(8);
         parallelMean3(8);
@@ -106,10 +106,12 @@ public class Mean {
 
         //TODO zmienic sposb podzialu na taki jak w 1 i 3
         MeanCalc threads[]= new MeanCalc[cnt];
-        int diff = array.length / cnt;
-        int start = 0;
-        for(int i = 0; i<cnt; i++){
-            threads[i] =  new MeanCalc(start, (start+=diff));
+
+        int elementow =  array.length / cnt;
+        int thr = 0;
+        for(int i = 0; i<array.length; i+=elementow, thr++){
+            int koniec = Math.min(i + elementow, array.length);
+            threads[thr] =  new MeanCalc(i, koniec);
         }
         double t1 = System.nanoTime()/1e6;
         for(MeanCalc mc : threads){

@@ -10,7 +10,6 @@ public class AsyncMean {
     static class MeanCalcSupplier implements Supplier<Double> {
         private final int start;
         private final int end;
-        double mean = 0;
 
         MeanCalcSupplier(int start, int end){
             this.start = start;
