@@ -41,15 +41,17 @@ public class Mean {
     public static void main(String[] args) {
         System.out.println("siea");
 //        initArray(100);
-//        initArray(100000);
-//        parallelMean3(16, 10);
-        test();
+        initArray(100000000);
+        parallelMean1(8);
+        parallelMean2(8);
+        parallelMean3(8);
+//        test();
     }
 
     public static void test() {
         initArray(128000000);
         for(int cnt:new int[]{1,2,4,8,16,32,64,128}){
-            parallelMean3(cnt, 50);
+            parallelMean3(cnt);
         }
     }
 
@@ -63,10 +65,11 @@ public class Mean {
         MeanCalc threads[]= new MeanCalc[cnt];
         // utwórz wątki, podziel tablice na równe bloki i przekaż indeksy do wątków
         // załóż, że array.length dzieli się przez cnt)
-        int diff = array.length / cnt;
-        int start = 0;
-        for(int i = 0; i<cnt; i++){
-            threads[i] =  new MeanCalc(start, (start+=diff));
+        int elementow =  array.length / cnt;
+        int thr = 0;
+        for(int i = 0; i<array.length; i+=elementow, thr++){
+            int koniec = Math.min(i + elementow, array.length);
+            threads[thr] =  new MeanCalc(i, koniec);
         }
 
         double t1 = System.nanoTime()/1e6;
@@ -91,7 +94,7 @@ public class Mean {
         }
         mean /= cnt;
         double t3 = System.nanoTime()/1e6;
-        System.out.printf(Locale.US,"size = %d cnt=%d >  t2-t1=%f t3-t1=%f mean=%f\n",
+        System.out.printf(Locale.US," 1 size = %d cnt=%d >  t2-t1=%f t3-t1=%f mean=%f\n",
                 array.length,
                 cnt,
                 t2-t1,
@@ -100,6 +103,8 @@ public class Mean {
     }
 
     static void parallelMean2(int cnt) {
+
+        //TODO zmienic sposb podzialu na taki jak w 1 i 3
         MeanCalc threads[]= new MeanCalc[cnt];
         int diff = array.length / cnt;
         int start = 0;
@@ -123,7 +128,7 @@ public class Mean {
         mean /= cnt;
 
         double t3 = System.nanoTime()/1e6;
-        System.out.printf(Locale.US,"size = %d cnt=%d >  t2-t1=%f t3-t1=%f mean=%f\n",
+        System.out.printf(Locale.US," 2 size = %d cnt=%d >  t2-t1=%f t3-t1=%f mean=%f\n",
                 array.length,
                 cnt,
                 t2-t1,
@@ -131,15 +136,16 @@ public class Mean {
                 mean);
     }
 
-    static void parallelMean3(int cnt, int ilosc_podzialow) {
+    static void parallelMean3(int cnt) {
 
         ExecutorService executor = Executors.newFixedThreadPool(cnt);
-        int start = 0;
-        int diff = array.length / ilosc_podzialow;
 
+        int elementow =  array.length / cnt;
+        int thr = 0;
         double t1 = System.nanoTime()/1e6;
-        for(int i=0;i<ilosc_podzialow;i++){
-            executor.execute(new MeanCalc(start, (start+=diff)));
+        for(int i = 0; i<array.length; i+=elementow, thr++){
+            int koniec = Math.min(i + elementow, array.length);
+            executor.execute(new MeanCalc(i, koniec));
         }
         executor.shutdown();
 
@@ -147,16 +153,16 @@ public class Mean {
 
         double mean = 0;
         try {
-            for(int i =0; i<ilosc_podzialow; i++){
+            for(int i =0; i<cnt; i++){
                 mean+=results.take();
             }
         } catch (InterruptedException e){
             System.out.println(e);
         }
-        mean /= ilosc_podzialow;
+        mean /= cnt;
 
         double t3 = System.nanoTime()/1e6;
-        System.out.printf(Locale.US,"size = %d cnt=%d >  t2-t1=%f t3-t1=%f mean=%f\n",
+        System.out.printf(Locale.US," 3 size = %d cnt=%d >  t2-t1=%f t3-t1=%f mean=%f\n",
                 array.length,
                 cnt,
                 t2-t1,
