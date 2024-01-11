@@ -2,9 +2,9 @@
 ## Project Overview
 
 The Mean project focuses on calculating the average value of elements in an array using concurrent thread processing. It utilizes the CompletableFuture class for asynchronous computation.
-Project Structure
 
-## The project consists of two main classes:
+## Project Structure
+The project consists of two main classes:
 
 Mean.java
 - This class implements the calculation of the average value of array elements using multiple threads.
